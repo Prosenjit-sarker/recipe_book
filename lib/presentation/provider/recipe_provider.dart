@@ -4,19 +4,31 @@ import 'package:recipe_book/domain/entities/recipe.dart';
 import '../../data/service/api_server.dart';
 
 class RecipeProvider extends ChangeNotifier {
-  ApiService _apiService = ApiService();
+  final ApiService _apiService = ApiService();
 
   List<Recipe> _categoryRecipes = [];
   List<Recipe> get categoryRecipes => _categoryRecipes;
 
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
-
   List<Recipe> _searchResults = [];
   List<Recipe> get searchResults => _searchResults;
 
+  List<Recipe> _weeklyRecipes = [];
+  List<Recipe> get weeklyRecipes => _weeklyRecipes;
+
+  bool _isCategoryLoading = false;
+  bool get isCategoryLoading => _isCategoryLoading;
+
+  bool _isSearchLoading = false;
+  bool get isSearchLoading => _isSearchLoading;
+
+  bool _isWeeklyLoading = false;
+  bool get isWeeklyLoading => _isWeeklyLoading;
+
+  bool get isLoading =>
+      _isCategoryLoading || _isSearchLoading || _isWeeklyLoading;
+
   Future<void> fetchRecipesByCategory(String category) async {
-    _isLoading = true;
+    _isCategoryLoading = true;
     notifyListeners();
     try {
       _categoryRecipes = await _apiService.getRecipesByCategory(category);
@@ -26,20 +38,33 @@ class RecipeProvider extends ChangeNotifier {
     } catch (e) {
       print('Error fetching recipes: $e');
     } finally {
-      _isLoading = false;
+      _isCategoryLoading = false;
       notifyListeners();
     }
   }
 
   Future<void> searchRecipes(String query) async {
-    _isLoading = true;
+    _isSearchLoading = true;
     notifyListeners();
     try {
       _searchResults = await _apiService.searchRecipes(query);
     } catch (e) {
       print('Error searching recipes: $e');
     } finally {
-      _isLoading = false;
+      _isSearchLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchWeeklyRecipes() async {
+    _isWeeklyLoading = true;
+    notifyListeners();
+    try {
+      _weeklyRecipes = await _apiService.getWeeklyRecipes();
+    } catch (e) {
+      print('Error fetching weekly recipes: $e');
+    } finally {
+      _isWeeklyLoading = false;
       notifyListeners();
     }
   }

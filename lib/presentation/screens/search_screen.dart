@@ -51,7 +51,7 @@ class _SearchScreenState extends State<SearchScreen> {
       ),
       body: Consumer<RecipeProvider>(
         builder: (context, provider, child) {
-          if (provider.isLoading) {
+          if (provider.isSearchLoading) {
             return Center(child: CircularProgressIndicator());
           }
           if (provider.searchResults.isEmpty) {

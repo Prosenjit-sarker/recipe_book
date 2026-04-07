@@ -34,4 +34,19 @@ class ApiService {
       throw Exception('Failed to search recipes');
     }
   }
+
+  Future<List<Recipe>> getWeeklyRecipes() async {
+    final response = await http.get(
+      Uri.parse(
+        '${AppStrings.baseUrl}/random?apiKey=${AppStrings.apiKey}&number=10',
+      ),
+    );
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+      final List results = json['recipes'];
+      return results.map((e) => RecipeModel.fromJson(e)).toList();
+    } else {
+      throw Exception('Failed to load weekly recipes');
+    }
+  }
 }
