@@ -1,10 +1,18 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:recipe_book/domain/entities/recipe.dart';
 import 'package:recipe_book/domain/entities/recipe_details.dart';
 
 import '../../data/service/api_server.dart';
 
 class RecipeProvider extends ChangeNotifier {
+  RecipeProvider() {
+    _loadSavedRecipes();
+  }
+
+  static const String _savedRecipesKey = 'saved_recipes';
   final ApiService _apiService = ApiService();
 
   List<Recipe> _categoryRecipes = [];
@@ -15,6 +23,9 @@ class RecipeProvider extends ChangeNotifier {
 
   List<Recipe> _weeklyRecipes = [];
   List<Recipe> get weeklyRecipes => _weeklyRecipes;
+
+  List<Recipe> _savedRecipes = [];
+  List<Recipe> get savedRecipes => _savedRecipes;
 
   bool _isCategoryLoading = false;
   bool get isCategoryLoading => _isCategoryLoading;
@@ -33,6 +44,9 @@ class RecipeProvider extends ChangeNotifier {
 
   String? _recipeDetailsError;
   String? get recipeDetailsError => _recipeDetailsError;
+
+  bool _isSavedRecipesLoading = true;
+  bool get isSavedRecipesLoading => _isSavedRecipesLoading;
 
   bool get isLoading =>
       _isCategoryLoading ||
@@ -109,5 +123,57 @@ class RecipeProvider extends ChangeNotifier {
   void clearSearchResults() {
     _searchResults = [];
     notifyListeners();
+  }
+
+  bool isRecipeSaved(int recipeId) {
+    return _savedRecipes.any((recipe) => recipe.id == recipeId);
+  }
+
+  Future<bool> toggleSavedRecipe(Recipe recipe) async {
+    final alreadySaved = isRecipeSaved(recipe.id);
+    if (alreadySaved) {
+      _savedRecipes = _savedRecipes
+          .where((savedRecipe) => savedRecipe.id != recipe.id)
+          .toList();
+    } else {
+      _savedRecipes = [recipe, ..._savedRecipes];
+    }
+
+    notifyListeners();
+    await _persistSavedRecipes();
+    return !alreadySaved;
+  }
+
+  Future<void> saveRecipe(Recipe recipe) async {
+    if (isRecipeSaved(recipe.id)) return;
+    _savedRecipes = [recipe, ..._savedRecipes];
+    notifyListeners();
+    await _persistSavedRecipes();
+  }
+
+  Future<void> _loadSavedRecipes() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedItems = prefs.getStringList(_savedRecipesKey) ?? [];
+    _savedRecipes = savedItems
+        .map((item) {
+          try {
+            return Recipe.fromJson(
+              Map<String, dynamic>.from(jsonDecode(item) as Map),
+            );
+          } catch (_) {
+            return null;
+          }
+        })
+        .whereType<Recipe>()
+        .toList();
+    _isSavedRecipesLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> _persistSavedRecipes() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedItems =
+        _savedRecipes.map((recipe) => jsonEncode(recipe.toJson())).toList();
+    await prefs.setStringList(_savedRecipesKey, savedItems);
   }
 }

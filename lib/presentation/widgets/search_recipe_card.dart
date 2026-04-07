@@ -1,7 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:recipe_book/domain/entities/recipe.dart';
+import 'package:recipe_book/presentation/provider/recipe_provider.dart';
 import 'package:recipe_book/presentation/screens/recipe_details_screen.dart';
+import 'package:recipe_book/presentation/screens/saved_recipes_screen.dart';
 
 import '../../core/app_color.dart';
 
@@ -12,6 +15,9 @@ class SearchRecipeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<RecipeProvider>();
+    final isSaved = provider.isRecipeSaved(recipe.id);
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -96,10 +102,26 @@ class SearchRecipeCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      const Icon(
-                        Icons.bookmark_rounded,
-                        color: AppColors.primary,
-                        size: 20,
+                      GestureDetector(
+                        onTap: () async {
+                          await context
+                              .read<RecipeProvider>()
+                              .saveRecipe(recipe);
+                          if (!context.mounted) return;
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SavedRecipesScreen(),
+                            ),
+                          );
+                        },
+                        child: Icon(
+                          isSaved
+                              ? Icons.bookmark_rounded
+                              : Icons.bookmark_outline_rounded,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
                       ),
                     ],
                   ),

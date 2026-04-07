@@ -4,9 +4,11 @@ import 'package:recipe_book/core/app_strings.dart';
 import 'package:recipe_book/domain/entities/recipe.dart';
 import 'package:recipe_book/presentation/provider/recipe_provider.dart';
 import 'package:recipe_book/presentation/screens/search_screen.dart';
+import 'package:recipe_book/presentation/screens/saved_recipes_screen.dart';
 
 import '../../core/app_color.dart';
 import '../widgets/recipe_card.dart';
+import '../widgets/responsive_scaffold_body.dart';
 import '../widgets/search_recipe_card.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -47,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: AppColors.surface,
         centerTitle: false,
         title: Column(
-          crossAxisAlignment: .start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               AppStrings.welcomeBack,
@@ -58,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(
                 color: AppColors.black,
                 fontSize: 16,
-                fontWeight: .w600,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
@@ -66,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
         leading: Padding(
           padding: const EdgeInsets.all(6.0),
           child: ClipRRect(
-            borderRadius: .circular(100),
+            borderRadius: BorderRadius.circular(100),
             child: Image.network(AppStrings.profileImageUrl),
           ),
         ),
@@ -80,47 +82,56 @@ class _HomeScreenState extends State<HomeScreen> {
             },
             icon: Icon(Icons.search),
           ),
-          SizedBox(width: 20),
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Icon(Icons.notifications),
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SavedRecipesScreen(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.bookmark_outline_rounded),
           ),
         ],
       ),
-      body: Consumer<RecipeProvider>(
-        builder: (context, provider, child) {
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  AppStrings.categories,
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 18,
-                    fontWeight: .w600,
+      body: ResponsiveScaffoldBody(
+        maxWidth: 900,
+        child: Consumer<RecipeProvider>(
+          builder: (context, provider, child) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppStrings.categories,
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                _buildCategoryList(),
-                const SizedBox(height: 8),
-                _buildRecipeSection(
-                  title: 'Popular Recipes',
-                  isLoading: provider.isCategoryLoading,
-                  recipes: provider.categoryRecipes,
-                  emptyMessage: 'No recipes found for this category.',
-                ),
-                const SizedBox(height: 24),
-                _buildWeeklyRecipeSection(
-                  title: 'Recipes of the Week',
-                  isLoading: provider.isWeeklyLoading,
-                  recipes: provider.weeklyRecipes,
-                  emptyMessage: 'No weekly recipes available right now.',
-                ),
-              ],
-            ),
-          );
-        },
+                  _buildCategoryList(),
+                  const SizedBox(height: 8),
+                  _buildRecipeSection(
+                    title: 'Popular Recipes',
+                    isLoading: provider.isCategoryLoading,
+                    recipes: provider.categoryRecipes,
+                    emptyMessage: 'No recipes found for this category.',
+                  ),
+                  const SizedBox(height: 24),
+                  _buildWeeklyRecipeSection(
+                    title: 'Recipes of the Week',
+                    isLoading: provider.isWeeklyLoading,
+                    recipes: provider.weeklyRecipes,
+                    emptyMessage: 'No weekly recipes available right now.',
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -139,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(
             color: AppColors.textPrimary,
             fontSize: 18,
-            fontWeight: .w700,
+            fontWeight: FontWeight.w700,
           ),
         ),
         const SizedBox(height: 12),
@@ -148,16 +159,16 @@ class _HomeScreenState extends State<HomeScreen> {
           child: isLoading
               ? Center(child: CircularProgressIndicator())
               : recipes.isEmpty
-              ? Center(child: Text(emptyMessage))
-              : ListView.builder(
-                  padding: EdgeInsets.zero,
-                  clipBehavior: Clip.none,
-                  scrollDirection: Axis.horizontal,
-                  itemCount: recipes.length,
-                  itemBuilder: (context, index) {
-                    return RecipeCard(recipe: recipes[index]);
-                  },
-                ),
+                  ? Center(child: Text(emptyMessage))
+                  : ListView.builder(
+                      padding: EdgeInsets.zero,
+                      clipBehavior: Clip.none,
+                      scrollDirection: Axis.horizontal,
+                      itemCount: recipes.length,
+                      itemBuilder: (context, index) {
+                        return RecipeCard(recipe: recipes[index]);
+                      },
+                    ),
         ),
       ],
     );
@@ -177,7 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(
             color: AppColors.textPrimary,
             fontSize: 18,
-            fontWeight: .w700,
+            fontWeight: FontWeight.w700,
           ),
         ),
         const SizedBox(height: 12),
@@ -223,8 +234,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 setState(() {
                   _selectedCategory = category;
                   context.read<RecipeProvider>().fetchRecipesByCategory(
-                    _selectedCategory,
-                  );
+                        _selectedCategory,
+                      );
                 });
               },
               child: Center(
@@ -244,11 +255,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Text(
                     categories[index],
                     style: TextStyle(
-                      color: isSelected
-                          ? Colors.white
-                          : AppColors.textSecondary,
+                      color:
+                          isSelected ? Colors.white : AppColors.textSecondary,
                       fontSize: 16,
-                      fontWeight: .w600,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),

@@ -1,9 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:recipe_book/core/app_color.dart';
 import 'package:recipe_book/data/service/api_server.dart';
 import 'package:recipe_book/domain/entities/recipe.dart';
 import 'package:recipe_book/domain/entities/recipe_details.dart';
+import 'package:recipe_book/presentation/provider/recipe_provider.dart';
+import 'package:recipe_book/presentation/screens/saved_recipes_screen.dart';
+import 'package:recipe_book/presentation/widgets/responsive_scaffold_body.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class RecipeDetailsScreen extends StatefulWidget {
@@ -26,25 +30,47 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isSaved =
+        context.watch<RecipeProvider>().isRecipeSaved(widget.recipe.id);
+
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         title: const Text('Recipe Details'),
+        actions: [
+          IconButton(
+            onPressed: () async {
+              await context.read<RecipeProvider>().saveRecipe(widget.recipe);
+              if (!context.mounted) return;
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SavedRecipesScreen(),
+                ),
+              );
+            },
+            icon: Icon(
+              isSaved ? Icons.bookmark_rounded : Icons.bookmark_outline_rounded,
+            ),
+          ),
+        ],
       ),
-      body: FutureBuilder<RecipeDetails>(
-        future: _detailsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: ResponsiveScaffoldBody(
+        child: FutureBuilder<RecipeDetails>(
+          future: _detailsFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          final details = snapshot.data ?? _fallbackDetails();
-          return _buildContent(
-            details: details,
-            showApiWarning: snapshot.hasError || !snapshot.hasData,
-          );
-        },
+            final details = snapshot.data ?? _fallbackDetails();
+            return _buildContent(
+              details: details,
+              showApiWarning: snapshot.hasError || !snapshot.hasData,
+            );
+          },
+        ),
       ),
     );
   }
@@ -80,14 +106,17 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
                 ),
               ),
               Positioned(
-                left: 16,
-                right: 16,
-                bottom: -54,
+                left: 0,
+                right: 0,
+                bottom: -70,
                 child: Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(18),
+                      topRight: Radius.circular(18),
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.08),

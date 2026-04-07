@@ -10,8 +10,4 @@ class RecipeModel extends Recipe {
       image: json['image'],
     );
   }
-
-  Map<String, dynamic> toJson() {
-    return {'id': id, 'title': title, 'image': image};
-  }
 }
