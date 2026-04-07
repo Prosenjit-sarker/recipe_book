@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:recipe_book/domain/entities/recipe.dart';
+import 'package:recipe_book/domain/entities/recipe_details.dart';
 
 import '../../data/service/api_server.dart';
 
@@ -24,19 +25,31 @@ class RecipeProvider extends ChangeNotifier {
   bool _isWeeklyLoading = false;
   bool get isWeeklyLoading => _isWeeklyLoading;
 
+  bool _isRecipeDetailsLoading = false;
+  bool get isRecipeDetailsLoading => _isRecipeDetailsLoading;
+
+  RecipeDetails? _selectedRecipeDetails;
+  RecipeDetails? get selectedRecipeDetails => _selectedRecipeDetails;
+
+  String? _recipeDetailsError;
+  String? get recipeDetailsError => _recipeDetailsError;
+
   bool get isLoading =>
-      _isCategoryLoading || _isSearchLoading || _isWeeklyLoading;
+      _isCategoryLoading ||
+      _isSearchLoading ||
+      _isWeeklyLoading ||
+      _isRecipeDetailsLoading;
 
   Future<void> fetchRecipesByCategory(String category) async {
     _isCategoryLoading = true;
     notifyListeners();
     try {
       _categoryRecipes = await _apiService.getRecipesByCategory(category);
-      print(
+      debugPrint(
         'Fetched ${_categoryRecipes.length} recipes for category: $category',
       );
     } catch (e) {
-      print('Error fetching recipes: $e');
+      debugPrint('Error fetching recipes: $e');
     } finally {
       _isCategoryLoading = false;
       notifyListeners();
@@ -49,7 +62,7 @@ class RecipeProvider extends ChangeNotifier {
     try {
       _searchResults = await _apiService.searchRecipes(query);
     } catch (e) {
-      print('Error searching recipes: $e');
+      debugPrint('Error searching recipes: $e');
     } finally {
       _isSearchLoading = false;
       notifyListeners();
@@ -62,11 +75,35 @@ class RecipeProvider extends ChangeNotifier {
     try {
       _weeklyRecipes = await _apiService.getWeeklyRecipes();
     } catch (e) {
-      print('Error fetching weekly recipes: $e');
+      debugPrint('Error fetching weekly recipes: $e');
     } finally {
       _isWeeklyLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> fetchRecipeDetails(int recipeId) async {
+    _isRecipeDetailsLoading = true;
+    _recipeDetailsError = null;
+    _selectedRecipeDetails = null;
+    notifyListeners();
+
+    try {
+      _selectedRecipeDetails = await _apiService.getRecipeDetails(recipeId);
+    } catch (e) {
+      _recipeDetailsError = 'Failed to load recipe details';
+      debugPrint('Error fetching recipe details: $e');
+    } finally {
+      _isRecipeDetailsLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void clearRecipeDetails() {
+    _selectedRecipeDetails = null;
+    _recipeDetailsError = null;
+    _isRecipeDetailsLoading = false;
+    notifyListeners();
   }
 
   void clearSearchResults() {
