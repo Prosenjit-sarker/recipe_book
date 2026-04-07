@@ -16,6 +16,7 @@ class _SavedRecipesScreenState extends State<SavedRecipesScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   String _query = '';
+  bool _isSearching = false;
 
   @override
   void dispose() {
@@ -30,13 +31,39 @@ class _SavedRecipesScreenState extends State<SavedRecipesScreen> {
       backgroundColor: AppColors.surface,
       appBar: AppBar(
         backgroundColor: AppColors.surface,
-        title: const Text('Saved Recipes'),
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+                autofocus: true,
+                onChanged: (value) {
+                  setState(() {
+                    _query = value;
+                  });
+                },
+                decoration: const InputDecoration(
+                  hintText: 'Search saved recipes...',
+                  border: InputBorder.none,
+                ),
+              )
+            : const Text('Saved Recipes'),
         actions: [
           IconButton(
             onPressed: () {
-              _searchFocusNode.requestFocus();
+              setState(() {
+                _isSearching = !_isSearching;
+                if (!_isSearching) {
+                  _searchController.clear();
+                  _query = '';
+                  _searchFocusNode.unfocus();
+                }
+              });
+
+              if (_isSearching) {
+                _searchFocusNode.requestFocus();
+              }
             },
-            icon: const Icon(Icons.search),
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
           ),
         ],
       ),
@@ -54,40 +81,8 @@ class _SavedRecipesScreenState extends State<SavedRecipesScreen> {
             }).toList();
 
             return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                  child: TextField(
-                    controller: _searchController,
-                    focusNode: _searchFocusNode,
-                    onChanged: (value) {
-                      setState(() {
-                        _query = value;
-                      });
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'Search saved recipes...',
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon: _query.isEmpty
-                          ? null
-                          : IconButton(
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() {
-                                  _query = '';
-                                });
-                              },
-                              icon: const Icon(Icons.close),
-                            ),
-                      filled: true,
-                      fillColor: const Color(0xFFF8F8F8),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(18),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-                ),
                 Expanded(
                   child: filteredRecipes.isEmpty
                       ? Center(
@@ -105,7 +100,9 @@ class _SavedRecipesScreenState extends State<SavedRecipesScreen> {
                           itemCount: filteredRecipes.length,
                           itemBuilder: (context, index) {
                             return SearchRecipeCard(
-                                recipe: filteredRecipes[index]);
+                              recipe: filteredRecipes[index],
+                              openSavedScreenOnSave: false,
+                            );
                           },
                         ),
                 ),

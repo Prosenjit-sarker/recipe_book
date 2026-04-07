@@ -85,16 +85,19 @@ class RecipeCard extends StatelessWidget {
                       top: 12,
                       child: GestureDetector(
                         onTap: () async {
-                          await context
+                          final didSave = await context
                               .read<RecipeProvider>()
-                              .saveRecipe(recipe);
+                              .toggleSavedRecipe(recipe);
                           if (!context.mounted) return;
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const SavedRecipesScreen(),
-                            ),
-                          );
+                          if (didSave) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const SavedRecipesScreen(),
+                              ),
+                            );
+                          }
                         },
                         child: Icon(
                           isSaved

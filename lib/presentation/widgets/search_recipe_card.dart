@@ -9,9 +9,14 @@ import 'package:recipe_book/presentation/screens/saved_recipes_screen.dart';
 import '../../core/app_color.dart';
 
 class SearchRecipeCard extends StatelessWidget {
-  const SearchRecipeCard({super.key, required this.recipe});
+  const SearchRecipeCard({
+    super.key,
+    required this.recipe,
+    this.openSavedScreenOnSave = true,
+  });
 
   final Recipe recipe;
+  final bool openSavedScreenOnSave;
 
   @override
   Widget build(BuildContext context) {
@@ -104,16 +109,19 @@ class SearchRecipeCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       GestureDetector(
                         onTap: () async {
-                          await context
+                          final didSave = await context
                               .read<RecipeProvider>()
-                              .saveRecipe(recipe);
+                              .toggleSavedRecipe(recipe);
                           if (!context.mounted) return;
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const SavedRecipesScreen(),
-                            ),
-                          );
+                          if (didSave && openSavedScreenOnSave) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const SavedRecipesScreen(),
+                              ),
+                            );
+                          }
                         },
                         child: Icon(
                           isSaved

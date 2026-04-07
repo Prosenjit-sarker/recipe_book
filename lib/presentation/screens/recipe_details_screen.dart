@@ -41,14 +41,18 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
         actions: [
           IconButton(
             onPressed: () async {
-              await context.read<RecipeProvider>().saveRecipe(widget.recipe);
+              final didSave = await context
+                  .read<RecipeProvider>()
+                  .toggleSavedRecipe(widget.recipe);
               if (!context.mounted) return;
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SavedRecipesScreen(),
-                ),
-              );
+              if (didSave) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SavedRecipesScreen(),
+                  ),
+                );
+              }
             },
             icon: Icon(
               isSaved ? Icons.bookmark_rounded : Icons.bookmark_outline_rounded,
